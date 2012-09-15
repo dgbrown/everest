@@ -7,33 +7,12 @@ package
 	
 	/// @author Derek Brown
 	public class NormalPlay extends FlxState 
-	{
-		
-		[Embed(source = "../assets/gfx/testbackground.png")]
-		private var _gfx_testBackground:Class;
-		[Embed(source = "../assets/gfx/tiles.png")]
-		private var _gfx_tilesClass:Class;
-		
-		[Embed(source = "../assets/gfx/level01.png")]
-		private var _gfx_level01Class:Class;
-		private var _gfx_level01:BitmapData = ( new _gfx_level01Class() as Bitmap ).bitmapData;
-		[Embed(source = "../assets/gfx/level02.png")]
-		private var _gfx_level02Class:Class;
-		private var _gfx_level02:BitmapData = ( new _gfx_level02Class() as Bitmap ).bitmapData;
-		
+	{	
 		private const SHERPA_MOVE_SPEED:Number = 40.0;
 		private const SHERPA_MAX_VELOCITY:Number = 100.0;
 		private const SHERPA_DRAG:Number = 55.0;
 		private const SHERPA_HURT_PUSH_FORCE:Number = 60.0;
 		private const SHERPA_ATTACK_PUSH_FORCE:Number = 50.0;
-		
-		private const TILE_SIZE:int = 16;
-		private const TILE_HALFSIZE:int = TILE_SIZE * 0.5;
-		
-		private const LEGEND_SPAWN:uint = 0xff00ff;
-		private const LEGEND_DEBRIS:uint = 0x00ff00;
-		private const LEGEND_GOAL:uint = 0x00ffff;
-		private const LEGEND_ENEMY_SMALLER:uint = 0xff0000;
 		
 		private var _p:Sherpa;
 		private var _background:FlxSprite;
@@ -48,79 +27,92 @@ package
 		private var _goal:Goal;
 		private var _spawners:FlxGroup;
 		private var _playerSpawn:Spawn;
+		private var _lvls:LevelManager;
+		private var _level:Level;
 		
 		override public function create():void 
 		{	
 			super.create();
 			FlxG.debug = true;
 			
-			// add objects
+			// create persistant objects
 			/////////////////////////////////////////////////////////////////
-			add( _map = new FlxTilemap().loadMap( FlxTilemap.imageToCSV( _gfx_level01Class ), _gfx_tilesClass, 16, 16, FlxTilemap.OFF, 0, 0, 1 ) );
+			_goal = new Goal( -100, -100 );
+			_playerSpawn = new Spawn( -100, -100 );
 			
-			add( _debris = new FlxGroup() );
-			
-			add( _goal = new Goal( -100, -100 ) );
-			add( _playerSpawn = new Spawn( -100, -100 ) );
-			
-			add( _yetis = new FlxGroup( 0 ) );
-			add( _emeralds = new FlxGroup( 0 ) );
-			
-			add( _p = new Sherpa( FlxG.width * 0.5, FlxG.height * 0.5 ) );
+			_p = new Sherpa( FlxG.width * 0.5, FlxG.height * 0.5 );
 			_p.maxVelocity.make( SHERPA_MAX_VELOCITY, SHERPA_MAX_VELOCITY );
 			_p.drag.make( SHERPA_DRAG, SHERPA_DRAG );
 	
 			_yetiSpawnTimer = new FlxTimer();
 			_yetiSpawnTimer.start( 2, 5, yetiSpawnTimerTick );
 			
-			add( _healthBar = new HealthBar( 3, 3, HealthBar.ICON_WIDTH * 6, Sherpa.STARTING_MAX_HEALTH * 0.5, 1 ) );
-			
-			add( _emeraldCounter = new EmeraldCounter( FlxG.width - EmeraldCounter.FRAME_WIDTH - 2, 2 ) );
+			_healthBar = new HealthBar( 3, 3, HealthBar.ICON_WIDTH * 6, Sherpa.STARTING_MAX_HEALTH * 0.5, 1 );
+			_emeraldCounter = new EmeraldCounter( FlxG.width - EmeraldCounter.FRAME_WIDTH - 2, 2 );
 			
 			_healthUpTimer = new FlxTimer();
 			_healthUpTimer.start( 0.25, 5, healthUpTimerTick );
 			/////////////////////////////////////////////////////////////////
 			
-			// parse level file for objects
-			/////////////////////////////////////////////////////////////////
-			var curLevelData:BitmapData = _gfx_level01;
-			var xp:uint = 0, yp:uint = 0, colorp:uint = 0;
-			var xr:Number = 0, yr:Number = 0;
-			for ( yp = 1; yp <= curLevelData.height; ++yp )
+			// setup level things
+			_lvls = new LevelManager();
+			_level = _lvls.current;
+			setupLevel( false );
+		}
+		
+		// TODO: change to take in level to be loaded as a paramater, clean up the current level, setup based on the new one, and then update the level pointer
+		private function setupLevel( CleanupPrevious:Boolean = true ):void
+		{
+			if ( CleanupPrevious )
 			{
-				for ( xp = 1; xp <= curLevelData.width; ++xp )
-				{
-					xr = xp * TILE_SIZE + TILE_HALFSIZE;
-					yr = yp * TILE_SIZE + TILE_HALFSIZE;
-					colorp = curLevelData.getPixel( xp, yp );
-					switch( colorp )
-					{
-						case LEGEND_SPAWN:
-							_p.centerOn( xr, yr );
-							_playerSpawn.centerOn( xr, yr );
-							break;
-						case LEGEND_DEBRIS:
-							_debris.add( new Debris( xr, yr ) );
-							_map.setTile( xp, yp, 1, false );
-							break;
-						case LEGEND_GOAL:
-							_goal.centerOn( xr, yr );
-							break;
-						/*
-						case LEGEND_ENEMY_SPAWNER:
-							_spawners.add( new Spawner( xr, yr ) );
-							_map.setTile( xp, yp, 1, false );
-							_map.setTile( xp + 1, yp, 1, false );
-							break;
-						*/
-					}
-				}
+				remove( _map, true );
+				_map = null;
+				
+				remove( _debris, true );
+				_debris = null;
+				
+				remove( _yetis, true );
+				_yetis = null;
+				
+				remove( _playerSpawn, true );
+				remove( _goal, true );
+				
+				remove( _p, true ); // don't destroy the player, we need to keep their state
+				remove( _healthBar, true );
+				remove( _emeraldCounter, true );
+				
+				remove( _emeralds, true );
+				_emeralds.destroy();
+				_emeralds = null;
+				
+				//remove( _spawners, true );
+				//_spawners = null;
 			}
-			/////////////////////////////////////////////////////////////////
 			
-			// setup camera
-			FlxG.camera.follow( _p, FlxCamera.STYLE_TOPDOWN );
-			_map.follow( FlxG.camera );
+			if ( _level != null && _level.isLoaded )
+			{
+				add( _map = _level.tilemap );
+				add( _debris = _level.debris );
+				
+				_goal.centerOn( _level.goalPos.x, _level.goalPos.y );
+				add( _goal );
+				
+				_playerSpawn.centerOn( _level.playerSpawnPos.x, _level.playerSpawnPos.y );
+				add( _playerSpawn );
+				
+				add( _yetis = _level.yetis );
+				add( _emeralds = new FlxGroup() );
+				
+				_p.centerOn( _lvls.current.playerSpawnPos.x, _lvls.current.playerSpawnPos.y );
+				add( _p );
+				
+				add( _healthBar );
+				add( _emeraldCounter );
+				
+				// setup camera
+				FlxG.camera.follow( _p, FlxCamera.STYLE_TOPDOWN );
+				_map.follow( FlxG.camera );
+			}
 		}
 		
 		/// pushes the AffectedObj away from the Source point by Force
@@ -172,10 +164,17 @@ package
 			}
 		}
 		
+		private function playerTouchedGoal( obj1:FlxObject, obj2:FlxObject ):void
+		{
+			_level = _lvls.gotoNext();
+			setupLevel();
+		}
+		
 		override public function update():void 
 		{
 			// check overlaps
 			FlxG.overlap( _p, _emeralds, playerTouchedEmerald );
+			FlxG.overlap( _p, _goal, playerTouchedGoal );
 			
 			// sample input and act on it
 			var frameMoveSpeed:Number = SHERPA_MOVE_SPEED * FlxG.elapsed;

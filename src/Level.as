@@ -23,6 +23,7 @@ package
 		public var debris:FlxGroup;
 		public var yetiSpawners:FlxGroup;
 		public var goalPos:FlxPoint;
+		public var isLoaded:Boolean;
 		
 		private var _levelDataClass:Class;
 		private var _tilesetClass:Class;
@@ -33,6 +34,7 @@ package
 			name = Name;
 			_levelDataClass = LevelDataClass;
 			_tilesetClass = TilesetClass;
+			isLoaded = false;
 		}
 		
 		public function load():void
@@ -79,6 +81,8 @@ package
 			}
 			curLevelData.dispose();
 			curLevelData = null;
+			
+			isLoaded = true;
 		}
 		
 		public function unload():void
@@ -92,6 +96,8 @@ package
 			debris = null;
 			yetiSpawners.destroy();
 			goalPos = null;
+			
+			isLoaded = false;
 		}
 		
 	}

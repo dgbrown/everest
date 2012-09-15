@@ -55,7 +55,6 @@ package
 			
 			addAnimationCallback( animationTick );
 			
-			
 			respawnAt( X, Y );
 		}
 		
@@ -70,6 +69,7 @@ package
 			centerOn( X, Y );
 			
 			health = Sherpa.STARTING_MAX_HEALTH;
+			exists = true;
 			alive = true;
 			visible = true;
 			active = true;
@@ -79,7 +79,7 @@ package
 		
 		public function respawn():void
 		{
-			respawnAt( x, y );
+			respawnAt( x + ORIGIN_X, y + ORIGIN_Y );
 		}
 		
 		public function playAttack( Force:Boolean = true ):void

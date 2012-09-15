@@ -7,10 +7,12 @@ package
 		// TILESETS
 		[Embed(source = "../assets/gfx/tiles.png")]
 		private var _gfx_tilesetSnowClass:Class;
-		[Embed(source = "../assets/gfx/town.png")]
-		private var _gfx_tilesetTownClass:Class;
+		//[Embed(source = "../assets/gfx/town.png")]
+		//private var _gfx_tilesetTownClass:Class;
 		
 		// LEVEL DATA
+		[Embed(source = "../assets/gfx/town.png")]
+		private var _gfx_levelTownClass:Class;
 		[Embed(source = "../assets/gfx/level01.png")]
 		private static const _gfx_level01Class:Class;
 		[Embed(source = "../assets/gfx/level02.png")]
@@ -27,12 +29,12 @@ package
 		
 		public function LevelManager() 
 		{
-			levels = new Array();
-			addLevel( "Town", "Town", _gfx_levelTownClass, _gfx_tilesetTownClass );
-			addLevel( "Level_1", "Level 1", _gfx_level01Class, _gfx_tilesetSnowClass );
-			addLevel( "Level_2", "Level 2", _gfx_level02Class, _gfx_tilesetSnowClass );
+			levels = new Dictionary();
+			addLevel( "town", "Town", _gfx_levelTownClass, _gfx_tilesetSnowClass );
+			addLevel( "level_1", "Level 1", _gfx_level01Class, _gfx_tilesetSnowClass );
+			addLevel( "level_2", "Level 2", _gfx_level02Class, _gfx_tilesetSnowClass );
 			
-			_level = 1;
+			_levelNum = 1;
 			_prevLevel = null;
 			_curLevel = getLevel( _levelNum );
 			_nextLevel = getLevel( _levelNum + 1 );
@@ -42,7 +44,7 @@ package
 		
 		private function addLevel( Id:String, Name:String, LevelDataClass:Class, TilesetClass:Class ):void
 		{
-			levels[Name] = new Level( Id, Name, LevelDataClass, TilesetClass );
+			levels[Id] = new Level( Id, Name, LevelDataClass, TilesetClass );
 		}
 		
 		private function getLevel( LevelNumber:int ):Level
@@ -90,7 +92,7 @@ package
 			
 			_curLevel.unload();
 			_curLevel = null;
-			_curLevel = _levels["town"];
+			_curLevel = levels["town"];
 			_curLevel.load();
 			
 			return _curLevel;
