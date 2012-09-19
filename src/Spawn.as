@@ -9,8 +9,13 @@ package
 		[Embed(source = "../assets/gfx/spawn.png")]
 		private const _gfx_spawnClass:Class;
 		
-		public static const ORIGIN_X:int = 4;
-		public static const ORIGIN_Y:int = 0;
+		public static const ORIGIN_X:int = -8;
+		public static const ORIGIN_Y:int = -4;
+		
+		/// x coordinate of this object's origin, in world space
+		public function get ox():Number { return x + ORIGIN_X; }
+		/// y coordinate of this object's origin, in world space
+		public function get oy():Number { return y + ORIGIN_Y; }
 		
 		/// origin starts centered at the given coordinates
 		public function Spawn( X:Number, Y:Number ) 

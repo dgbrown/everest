@@ -29,6 +29,7 @@ package
 		private var _playerSpawn:Spawn;
 		private var _lvls:LevelManager;
 		private var _level:Level;
+		private var _al:FlxGroup;
 		
 		override public function create():void 
 		{	
@@ -44,8 +45,8 @@ package
 			_p.maxVelocity.make( SHERPA_MAX_VELOCITY, SHERPA_MAX_VELOCITY );
 			_p.drag.make( SHERPA_DRAG, SHERPA_DRAG );
 	
-			_yetiSpawnTimer = new FlxTimer();
-			_yetiSpawnTimer.start( 2, 5, yetiSpawnTimerTick );
+			//_yetiSpawnTimer = new FlxTimer();
+			//_yetiSpawnTimer.start( 2, 5, yetiSpawnTimerTick );
 			
 			_healthBar = new HealthBar( 3, 3, HealthBar.ICON_WIDTH * 6, Sherpa.STARTING_MAX_HEALTH * 0.5, 1 );
 			_emeraldCounter = new EmeraldCounter( FlxG.width - EmeraldCounter.FRAME_WIDTH - 2, 2 );
@@ -103,15 +104,16 @@ package
 				add( _yetis = _level.yetis );
 				add( _emeralds = new FlxGroup() );
 				
-				_p.centerOn( _lvls.current.playerSpawnPos.x, _lvls.current.playerSpawnPos.y );
+				_p.centerOn( _level.playerSpawnPos.x, _level.playerSpawnPos.y );
 				add( _p );
 				
 				add( _healthBar );
 				add( _emeraldCounter );
 				
 				// setup camera
+				FlxG.camera.focusOn( new FlxPoint( _p.x, _p.y ) );
 				FlxG.camera.follow( _p, FlxCamera.STYLE_TOPDOWN );
-				_map.follow( FlxG.camera );
+				_map.follow( FlxG.camera, -40 );
 			}
 		}
 		
@@ -132,7 +134,7 @@ package
 		
 		private function yetiSpawnTimerTick( Timer:FlxTimer ):void
 		{
-			_yetis.add( new Yeti( Math.random() * FlxG.width, Math.random() * FlxG.height, _p, _map ) );
+			_yetis.add( new Yeti( Math.random() * FlxG.width, Math.random() * FlxG.height ) );
 			if ( Timer.loopsLeft == 0 && Timer.time == 2 && Timer.loops == 5 )
 			{
 				Timer.start( 8, 10, yetiSpawnTimerTick );
@@ -170,6 +172,9 @@ package
 			setupLevel();
 		}
 		
+		public function get player():Sherpa { return _p; }
+		public function get tilemap():FlxTilemap { return _map; }
+		
 		override public function update():void 
 		{
 			// check overlaps
@@ -191,11 +196,23 @@ package
 			
 			if ( FlxG.keys.justPressed( "SPACE" ) )
 			{
-				var yetisHit:Array = _p.attack( _yetis );
-				for ( var i:uint = 0; i < yetisHit.length; ++i )
+				var i:int = 0;
+				
+				var debrisHit:Array = _p.attack( _debris );
+				for ( i = 0; i < debrisHit.length; ++i )
 				{
-					push( new FlxPoint( _p.x, _p.y ), yetisHit[i], SHERPA_ATTACK_PUSH_FORCE );
+ 					var deb:Debris = debrisHit[i];
+					if ( !deb.alive )
+					{
+						var tilex:int = deb.ox / Level.TILE_SIZE;
+						var tiley:int = deb.oy / Level.TILE_SIZE;
+						_map.setTile( tilex, tiley, 0, false );
+					}
 				}
+				
+				var yetisHit:Array = _p.attack( _yetis );
+				for ( i = 0; i < yetisHit.length; ++i )
+					push( new FlxPoint( _p.x, _p.y ), yetisHit[i], SHERPA_ATTACK_PUSH_FORCE );
 			}
 			
 			if ( FlxG.keys.justPressed( "R" ) )
@@ -211,6 +228,12 @@ package
 			if ( _healthBar.getHeartPeices() != _p.health )
 				_healthBar.setHeartPeices( _p.health );
 			super.update();
+		}
+		
+		override public function draw():void 
+		{
+			// _al.sort();
+			super.draw();
 		}
 		
 	}

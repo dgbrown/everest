@@ -27,6 +27,11 @@ package
 		
 		private var _lastHit:Number = 0.0;
 		
+		/// x coordinate of this object's origin, in world space
+		public function get ox():Number { return x + ORIGIN_X; }
+		/// y coordinate of this object's origin, in world space
+		public function get oy():Number { return y + ORIGIN_Y; }
+		
 		public function get isVulnerable():Boolean
 		{
 			return FlxU.getTicks() >= _lastHit + (1000*INVULN_DURATION);
@@ -109,39 +114,38 @@ package
 			var confirmedHits:Array = new Array();
 			for ( var i:uint = 0; i < PotentialHits.length; ++i )
 			{
-				var basic:FlxBasic = PotentialHits.members[i];
-				if ( basic.alive && basic is Yeti )
-				{
-					var yeti:Yeti = basic as Yeti;
-					
-					var dX:Number = yeti.x - x;
-					var dY:Number = yeti.y - y;
+				var target:FlxObject = PotentialHits.members[i];
+				if ( target.alive )
+				{	
+					var dX:Number = target.x - x;
+					var dY:Number = target.y - y;
 					var dT:Number = Math.sqrt( dX * dX + dY * dY );
 					
-					if ( dT <= Sherpa.ATTACK_RADIUS + Yeti.RADIUS ) // we have a collision
+					var hitPossible:Boolean = false;
+					switch( dir )
 					{
-						var hitConfirmed:Boolean = false;
-						switch( dir )
+						case "up":
+							hitPossible = target.y <= y;
+							break;
+						case "down":
+							hitPossible = target.y >= y;
+							break;
+						case "left":
+							hitPossible = target.x <= x;
+							break;
+						case "right":
+							hitPossible = target.x >= x;
+							break;
+						default:
+							hitPossible = false;
+					}
+					if ( hitPossible )
+					{
+						if ( ( target is Yeti && dT <= Sherpa.ATTACK_RADIUS + Yeti.RADIUS ) ||
+							 ( dT <= Sherpa.ATTACK_RADIUS + 22 ) )
 						{
-							case "up":
-								hitConfirmed = yeti.y <= y;
-								break;
-							case "down":
-								hitConfirmed = yeti.y >= y;
-								break;
-							case "left":
-								hitConfirmed = yeti.x <= x;
-								break;
-							case "right":
-								hitConfirmed = yeti.x >= x;
-								break;
-							default:
-								hitConfirmed = false;
-						}
-						if ( hitConfirmed )
-						{
-							confirmedHits.push( basic );
-							yeti.hurt( Sherpa.ATTACK_DAMAGE );
+							confirmedHits.push( target );
+							target.hurt( Sherpa.ATTACK_DAMAGE );
 						}
 					}
 				}
