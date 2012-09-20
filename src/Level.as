@@ -73,10 +73,10 @@ package
 			var rowData:Array = new Array();
 			var color:uint = 0x000000;
 			var tileType:int = 0;
-			for ( var y:int = 0; y <= LevelData.height; ++y )
+			for ( var y:int = 0; y < LevelData.height; ++y )
 			{
 				rowData.length = LevelData.width;
-				for ( var x:int = 0; x <= LevelData.width; ++x )
+				for ( var x:int = 0; x < LevelData.width; ++x )
 				{
 					color = LevelData.getPixel( x, y );
 					switch( color )
@@ -113,7 +113,7 @@ package
 					switch( colorp )
 					{
 						case LEGEND_OBJ_SPAWN:
-							playerSpawnPos.make( xr, yr - 16 );
+							playerSpawnPos.make( xr, yr );
 							break;
 						case LEGEND_OBJ_DEBRIS:
 							debris.add( new Debris( xr, yr ) );

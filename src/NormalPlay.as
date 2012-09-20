@@ -35,6 +35,7 @@ package
 		{	
 			super.create();
 			FlxG.debug = true;
+			FlxG.mouse.hide();
 			
 			// create persistant objects
 			/////////////////////////////////////////////////////////////////
@@ -206,7 +207,7 @@ package
 					{
 						var tilex:int = deb.ox / Level.TILE_SIZE;
 						var tiley:int = deb.oy / Level.TILE_SIZE;
-						_map.setTile( tilex, tiley, 0, false );
+						_map.setTile( tilex, tiley, 0, true );
 					}
 				}
 				
@@ -221,6 +222,7 @@ package
 			// check and resolve collisions
 			FlxG.collide( _p, _yetis, playerTouchedYeti );
 			FlxG.collide( _p, _map );
+			FlxG.collide( _yetis, _map );
 			
 			// update ui state
 			if ( _emeraldCounter.getValue() != _p.nEmeralds )

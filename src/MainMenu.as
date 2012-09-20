@@ -15,6 +15,9 @@ package
 			
 			FlxG.mouse.show();
 			
+			if ( FlxG.debug )
+				FlxG.switchState( new NormalPlay() );
+			
 			var nBtns:Number = 0;
 			var btnSize:FlxPoint = new FlxPoint();
 			var btnSpacing:Number = 5; // 10 pixels below

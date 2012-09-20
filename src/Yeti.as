@@ -37,15 +37,22 @@ package
 		private var _map:FlxTilemap; // where am i?
 		
 		/// x coordinate of this object's origin, in world space
-		public function get ox():Number { return x + ORIGIN_X; }
+		public function get ox():Number { return x - ORIGIN_X; }
 		/// y coordinate of this object's origin, in world space
-		public function get oy():Number { return y + ORIGIN_Y; }
+		public function get oy():Number { return y - ORIGIN_Y; }
+		
+		public function centerOn( X:Number, Y:Number ):void
+		{
+			x = X - ORIGIN_X;
+			y = Y - ORIGIN_Y;
+		}
 		
 		public function Yeti( X:Number=0, Y:Number=0 ) 
 		{
 			_lastX = X;
 			_lastY = Y;
 			super( X, Y );
+			centerOn( X, Y );
 			
 			loadGraphic( _gfx_yetiClass, true, false, 29, 31 );
 			addAnimation( "up_idle", [0], Yeti.ANIM_FRAME_RATE, true );
