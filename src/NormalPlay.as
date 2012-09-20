@@ -223,6 +223,7 @@ package
 			FlxG.collide( _p, _yetis, playerTouchedYeti );
 			FlxG.collide( _p, _map );
 			FlxG.collide( _yetis, _map );
+			FlxG.collide( _yetis, _yetis );
 			
 			// update ui state
 			if ( _emeraldCounter.getValue() != _p.nEmeralds )

@@ -9,7 +9,8 @@ package
 	public class Yeti extends FlxSprite 
 	{
 		
-		[Embed(source = "../assets/gfx/basic_yeti.png")]
+		//[Embed(source = "../assets/gfx/basic_yeti.png")]
+		[Embed(source="../assets/gfx/yeti_redux.png")]
 		private var _gfx_yetiClass:Class;
 		
 		private static const MAX_HEALTH:Number = 20.0;
@@ -21,8 +22,8 @@ package
 		private static const ANIM_FRAME_RATE:Number = 20.0;
 		public static const RADIUS:Number = 32.0;
 		public static const DAMAGE:uint = 1;
-		public static const ORIGIN_X:int = 0;
-		public static const ORIGIN_Y:int = 0;
+		public static const ORIGIN_X:int = 8;
+		public static const ORIGIN_Y:int = 12;
 		public static const THINK_HEARTBEAT:Number = 1000;
 		
 		public var target:Sherpa;
@@ -54,7 +55,8 @@ package
 			super( X, Y );
 			centerOn( X, Y );
 			
-			loadGraphic( _gfx_yetiClass, true, false, 29, 31 );
+			//loadGraphic( _gfx_yetiClass, true, false, 29, 31 );
+			loadGraphic( _gfx_yetiClass, true, false, 16, 16 );
 			addAnimation( "up_idle", [0], Yeti.ANIM_FRAME_RATE, true );
 			addAnimation( "down_idle", [1], Yeti.ANIM_FRAME_RATE, true );
 			addAnimation( "left_idle", [2], Yeti.ANIM_FRAME_RATE, true );
@@ -107,7 +109,7 @@ package
 		{
 			// animation state
 			updateDirection();
-			playIdle();
+			playIdle(true);
 			if ( target == null || _map == null )
 			{
 				//if ( onScreen() )
