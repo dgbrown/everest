@@ -49,7 +49,7 @@ package
 			//_yetiSpawnTimer = new FlxTimer();
 			//_yetiSpawnTimer.start( 2, 5, yetiSpawnTimerTick );
 			
-			_healthBar = new HealthBar( 3, 3, HealthBar.ICON_WIDTH * 6, Sherpa.STARTING_MAX_HEALTH * 0.5, 1 );
+			_healthBar = new HealthBar( 3, 3, HealthBar.ICON_WIDTH * 6, _p.maxHealth * 0.5, 1 );
 			_emeraldCounter = new EmeraldCounter( FlxG.width - EmeraldCounter.FRAME_WIDTH - 2, 2 );
 			
 			_healthUpTimer = new FlxTimer();
@@ -114,7 +114,7 @@ package
 				// setup camera
 				FlxG.camera.focusOn( new FlxPoint( _p.x, _p.y ) );
 				FlxG.camera.follow( _p, FlxCamera.STYLE_TOPDOWN );
-				_map.follow( FlxG.camera, -40 );
+				_map.follow( FlxG.camera );
 			}
 		}
 		
@@ -160,9 +160,9 @@ package
 		
 		private function playerTouchedYeti( obj1:FlxObject, obj2:FlxObject ):void
 		{
-			if ( _p.isVulnerable )
+			if ( _p.vulnerable )
 			{
-				_p.hurt( Yeti.DAMAGE );
+				_p.hurt( (obj2 as Yeti).attackDamage );
 				push( new FlxPoint( obj2.x, obj2.y ), obj1, SHERPA_HURT_PUSH_FORCE );
 			}
 		}

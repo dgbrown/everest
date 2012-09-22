@@ -6,71 +6,65 @@ package
 	 * ...
 	 * @author Derek brown
 	 */
-	public class Yeti extends FlxSprite 
+	public class Yeti extends EverEnt 
 	{
-		
-		//[Embed(source = "../assets/gfx/basic_yeti.png")]
 		[Embed(source="../assets/gfx/yeti_redux.png")]
 		private var _gfx_yetiClass:Class;
 		
-		private static const MAX_HEALTH:Number = 20.0;
-		private static const MOVE_SPEED:Number = 32;
-		private static const HURT_MOVE_SPEED:Number = 10.0;
-		private static const HURT_DURATION:Number = 1.0;
-		private static const MAX_VELOCITY:Number = Yeti.MOVE_SPEED;
-		private static const DRAG:Number = 80.0;
-		private static const ANIM_FRAME_RATE:Number = 20.0;
-		public static const RADIUS:Number = 32.0;
-		public static const DAMAGE:uint = 1;
-		public static const ORIGIN_X:int = 8;
-		public static const ORIGIN_Y:int = 12;
-		public static const THINK_HEARTBEAT:Number = 1000;
-		
+		public var maxHealth:Number;
+		public var moveSpeed:Number;
+		public var hurtMoveSpeed:Number;
+		public var hurtDuration:Number;
+		public var attackDamage:Number;
 		public var target:Sherpa;
-		public var dir:String;
+		public var dir:String; /// "up", "left", "down", or "right"
 		
 		private var _yetiHurtUntil:Number;
 		private var _lastX:Number;
 		private var _lastY:Number;
 		private var _world:NormalPlay;
 		private var _nextThinkMark:Number;
-		
-		private var _map:FlxTilemap; // where am i?
-		
-		/// x coordinate of this object's origin, in world space
-		public function get ox():Number { return x - ORIGIN_X; }
-		/// y coordinate of this object's origin, in world space
-		public function get oy():Number { return y - ORIGIN_Y; }
-		
-		public function centerOn( X:Number, Y:Number ):void
-		{
-			x = X - ORIGIN_X;
-			y = Y - ORIGIN_Y;
-		}
+		private var _framerate:int;
+		private var _thinkDelay:Number;
+		private var _map:FlxTilemap; /// where am i?
 		
 		public function Yeti( X:Number=0, Y:Number=0 ) 
 		{
-			_lastX = X;
-			_lastY = Y;
-			super( X, Y );
-			centerOn( X, Y );
+			super();
+			collisionWidth = 14;
+			collisionHeight = 10;
+			collisionRadius = 10;
+			spriteWidth = 16;
+			spriteHeight = 16;
+			originX = 8;
+			originY = 12;
 			
-			//loadGraphic( _gfx_yetiClass, true, false, 29, 31 );
-			loadGraphic( _gfx_yetiClass, true, false, 16, 16 );
-			addAnimation( "up_idle", [0], Yeti.ANIM_FRAME_RATE, true );
-			addAnimation( "down_idle", [1], Yeti.ANIM_FRAME_RATE, true );
-			addAnimation( "left_idle", [2], Yeti.ANIM_FRAME_RATE, true );
-			addAnimation( "right_idle", [3], Yeti.ANIM_FRAME_RATE, true );
+			health = maxHealth = 20;
+			moveSpeed = 32;
+			hurtMoveSpeed = 10;
+			hurtDuration = 1000;
+			drag.make( 80, 80 );
+			attackDamage = 1;
+			_framerate = 20;
+			_thinkDelay = 800;
+		
+			loadGraphic( _gfx_yetiClass, true, false, spriteWidth, spriteHeight );
+			addAnimation( "up_idle", [0], _framerate, true );
+			addAnimation( "down_idle", [1], _framerate, true );
+			addAnimation( "left_idle", [2], _framerate, true );
+			addAnimation( "right_idle", [3], _framerate, true );
 			
 			_world = FlxG.state as NormalPlay;
-			
 			_map = _world.tilemap;
 			
 			dir = "down";
 			playIdle();
 			
-			health = Yeti.MAX_HEALTH;
-			drag.make( Yeti.DRAG, Yeti.DRAG );
+			centerOn( X, Y );
+			_lastX = X;
+			_lastY = Y;
+			
+			setNextThink( Math.round( Math.random() * 9000 + 1000 ) );
 		}
 		
 		public function playIdle( Force:Boolean = false ):void
@@ -85,24 +79,19 @@ package
 			
 			if ( Math.abs( dx ) > Math.abs( dy ) ) // mostly traveling horizontally
 			{
-				if ( dx >= 0 )
+				if ( dx > 0 )
 					dir = "right";
-				else
+				else if( dx < 0 )
 					dir = "left";
 			}
 			else // mostly traveling vertically
 			{
-				if ( dy >= 0 )
+				if ( dy > 0 )
 					dir = "down";
-				else
+				else if( dy < 0 )
 					dir = "up";
 			}
 			
-		}
-		
-		override public function draw():void 
-		{
-			super.draw();
 		}
 		
 		override public function update():void 
@@ -116,17 +105,17 @@ package
 				//{
 					target = _world.player;
 					_map = _world.tilemap;
-					_nextThinkMark = FlxU.getTicks() + THINK_HEARTBEAT;
+					setNextThink( _thinkDelay );
 				//}
 			}
 			else
 			{
 				var mapBounds:FlxRect = _map.getBounds();
-				if ( x >= mapBounds.left && x <= mapBounds.right && y >= mapBounds.top && y <= mapBounds.bottom && FlxU.getTicks() >= _nextThinkMark )
+				if ( FlxU.getTicks() >= _nextThinkMark )
 				{
-					_nextThinkMark = FlxU.getTicks() + THINK_HEARTBEAT;
+					setNextThink( _thinkDelay );
 					
-					var newPath:FlxPath = _map.findPath( new FlxPoint( x + width * 0.5, y + height * 0.5 ), new FlxPoint( target.x + target.width * 0.5, target.y + target.height * 0.5 ), true );
+					var newPath:FlxPath = _map.findPath( new FlxPoint( ox, oy ), new FlxPoint( target.ox, target.oy ), true );
 					if ( newPath )
 					{
 						if ( path )
@@ -136,19 +125,29 @@ package
 							path = newPath;
 						}
 						else
-							followPath( newPath, MOVE_SPEED );
+							followPath( newPath, moveSpeed );
 					}
 				}
 			}
 			super.update();
+			_lastX = x;
+			_lastY = y;
 		}
 		
 		override public function hurt(Damage:Number):void 
 		{
-			_yetiHurtUntil = FlxU.getTicks() + Yeti.HURT_DURATION * 1000;
-			flicker(0.5);
+			stopFollowingPath(true);
+			setNextThink( hurtDuration );
+			flicker( hurtDuration / 1000 );
 			super.hurt(Damage);
 		}
+		
+		/// Tick is the delay in milliseconds before the next think
+		private function setNextThink( Tick:Number ):void
+		{
+			_nextThinkMark = FlxU.getTicks() + Tick;
+		}
+		
 		
 		override public function kill():void 
 		{
