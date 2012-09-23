@@ -36,6 +36,7 @@ package
 			super.create();
 			FlxG.debug = true;
 			FlxG.mouse.hide();
+			//FlxG.mouse.show();
 			
 			// create persistant objects
 			/////////////////////////////////////////////////////////////////
@@ -49,7 +50,7 @@ package
 			//_yetiSpawnTimer = new FlxTimer();
 			//_yetiSpawnTimer.start( 2, 5, yetiSpawnTimerTick );
 			
-			_healthBar = new HealthBar( 3, 3, HealthBar.ICON_WIDTH * 6, _p.maxHealth * 0.5, 1 );
+			_healthBar = new HealthBar( 3, 3, HealthBar.ICON_WIDTH * 6 );
 			_emeraldCounter = new EmeraldCounter( FlxG.width - EmeraldCounter.FRAME_WIDTH - 2, 2 );
 			
 			_healthUpTimer = new FlxTimer();
@@ -130,7 +131,7 @@ package
 		
 		private function healthUpTimerTick( Timer:FlxTimer ):void
 		{
-			_healthBar.setHeartPeices( _healthBar.getHeartPeices() + 1 );
+			//_healthBar.setHeartPeices( _healthBar.getHeartPeices() + 1 );
 		}
 		
 		private function yetiSpawnTimerTick( Timer:FlxTimer ):void
@@ -223,13 +224,22 @@ package
 			FlxG.collide( _p, _yetis, playerTouchedYeti );
 			FlxG.collide( _p, _map );
 			FlxG.collide( _yetis, _map );
-			FlxG.collide( _yetis, _yetis );
+			//FlxG.collide( _yetis, _yetis );
 			
 			// update ui state
 			if ( _emeraldCounter.getValue() != _p.nEmeralds )
 				_emeraldCounter.setValue( _p.nEmeralds );
 			if ( _healthBar.getHeartPeices() != _p.health )
 				_healthBar.setHeartPeices( _p.health );
+				
+			/*
+			if ( FlxG.mouse.justReleased() )
+			{
+				var mousePos:FlxPoint = FlxG.mouse.getWorldPosition();
+				_p.centerOn( mousePos.x, mousePos.y );
+			}
+			*/
+				
 			super.update();
 		}
 		

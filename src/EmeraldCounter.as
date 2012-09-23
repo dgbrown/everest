@@ -30,7 +30,7 @@ package
 		public function EmeraldCounter(X:Number=0, Y:Number=0) 
 		{
 			super(X, Y, EmeraldCounter.FRAME_WIDTH, ICON_HEIGHT + 2);
-			
+			scrollFactor.make();
 			_countLabel = new FlxText(0, 0, 30, "0x" );
 			_countLabel.alignment = "right";
 		}

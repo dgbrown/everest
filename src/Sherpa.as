@@ -34,20 +34,17 @@ package
 			collisionRadius = 10;
 			spriteWidth = 12;
 			spriteHeight = 12;
-			originX = 5;
+			originX = 6;
 			originY = 9;
 			
 			_framerate = 20;
 			attackRadius = 25;
 			attackDamage = 5;
 			_hurtDuration = 1000;
-			_defaultMaxHealth = maxHealth = 6;
+			_defaultMaxHealth = maxHealth = 10;
 			
 			initGraphics();
-			
-			width = collisionWidth;
-			height = collisionHeight;
-			offset.make( originX - collisionWidth * 0.5, originY - collisionHeight * 0.5 );
+			initFancyCollisions();
 			
 			respawnAt( X, Y );
 		}
@@ -80,7 +77,7 @@ package
 		
 		public function respawn():void
 		{
-			respawnAt( ox, y + oy );
+			respawnAt( ox, oy );
 		}
 		
 		public function playAttack( Force:Boolean = true ):void

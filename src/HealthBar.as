@@ -45,6 +45,7 @@ package
 		public function HealthBar( X:Number = 0, Y:Number = 0, Width:Number = 0, MaxHearts:uint = 5, HeartPeices:uint = 10 ) 
 		{
 			super(X, Y, Width, HealthBar.ICON_WIDTH);
+			scrollFactor.make();
 			setMaxHearts( MaxHearts );
 			_heartPeices = HeartPeices;
 			
