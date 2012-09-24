@@ -1,5 +1,7 @@
 package  
 {
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.geom.Vector3D;
 	import org.flixel.*;
@@ -9,9 +11,10 @@ package
 	 * @author Derek brown
 	 */
 	public class Yeti extends EverEnt 
-	{
-		[Embed(source="../assets/gfx/yeti_redux.png")]
-		private var _gfx_yetiClass:Class;
+	{	
+		[Embed(source="../assets/gfx/exclam.png")]
+		protected static var _gfx_exclamClass:Class;
+		protected static var _exclam:BitmapData = ( new _gfx_exclamClass() as Bitmap ).bitmapData;
 		
 		public var maxHealth:Number;
 		public var moveSpeed:Number;
@@ -24,33 +27,28 @@ package
 		public var viewDist:Number;
 		public var wanderDist:Number;
 		
-		private static const AI_STATE_SLEEP:uint = 0;
-		private static const AI_STATE_WANDER:uint = 1;
-		private static const AI_STATE_CHASE:uint = 2;
+		protected static const AI_STATE_SLEEP:uint = 0;
+		protected static const AI_STATE_WANDER:uint = 1;
+		protected static const AI_STATE_CHASE:uint = 2;
 		
-		private var _yetiHurtUntil:Number;
-		private var _lastX:Number;
-		private var _lastY:Number;
-		private var _world:NormalPlay;
-		private var _nextThinkMark:Number;
-		private var _framerate:int;
-		private var _thinkDelay:Number;
-		private var _map:FlxTilemap; /// where am i?
-		private var _aiState:uint;
-		private var _wanderDest:FlxPoint;
-		private var _lastTargetTileX:int;
-		private var _lastTargetTileY:int;
+		protected var _yetiHurtUntil:Number;
+		protected var _lastX:Number;
+		protected var _lastY:Number;
+		protected var _world:NormalPlay;
+		protected var _nextThinkMark:Number;
+		protected var _framerate:int;
+		protected var _thinkDelay:Number;
+		protected var _map:FlxTilemap; /// where am i?
+		protected var _aiState:uint;
+		protected var _wanderDest:FlxPoint;
+		protected var _lastTargetTileX:int;
+		protected var _lastTargetTileY:int;
+		protected var _surprisedUntil:Number;
+		protected var _surprisedDuration:Number;
 	
 		public function Yeti( X:Number=0, Y:Number=0 ) 
 		{
 			super();
-			collisionWidth = 14;
-			collisionHeight = 10;
-			collisionRadius = 10;
-			spriteWidth = 16;
-			spriteHeight = 16;
-			originX = 8;
-			originY = 12;
 			
 			health = maxHealth = 20;
 			moveSpeed = 32;
@@ -60,17 +58,11 @@ package
 			attackDamage = 1;
 			_framerate = 20;
 			_thinkDelay = 1500;
-			fov = 45;
+			fov = 75;
 			viewDist = Level.TILE_SIZE * 4;
 			wanderDist = viewDist;
-		
-			loadGraphic( _gfx_yetiClass, true, false, spriteWidth, spriteHeight );
-			addAnimation( "up_idle", [0], _framerate, true );
-			addAnimation( "down_idle", [1], _framerate, true );
-			addAnimation( "left_idle", [2], _framerate, true );
-			addAnimation( "right_idle", [3], _framerate, true );
-			
-			initFancyCollisions();
+			_surprisedUntil = 0;
+			_surprisedDuration = 1000;
 			
 			_world = FlxG.state as NormalPlay;
 			_map = _world.tilemap;
@@ -127,30 +119,28 @@ package
 				return;
 			}
 			
-			switch( _aiState )
-			{
-				case AI_STATE_SLEEP:
-					thinkSleep();
-					break;
-				case AI_STATE_WANDER:
-					thinkWander();
-					break;
-				case AI_STATE_CHASE:
-					thinkChase();
-					break;
-				default:
-					thinkSleep();
-			}
+			think();
 			
 			super.update();
 			_lastX = x;
 			_lastY = y;
 		}
 		
-		private function thinkSleep():void
+		protected function think():void
+		{
+			if ( _aiState == AI_STATE_SLEEP )
+				thinkSleep();
+			if ( _aiState == AI_STATE_WANDER )
+				thinkWander();
+			if ( _aiState == AI_STATE_CHASE )
+				thinkChase();
+		}
+		
+		protected function thinkSleep():void
 		{
 			if ( target && canSee( target ) )
 			{
+				_surprisedUntil = FlxU.getTicks() + _surprisedDuration;
 				_aiState = AI_STATE_CHASE;
 			}
 			else if ( FlxU.getTicks() >= _nextThinkMark )
@@ -159,12 +149,13 @@ package
 			}
 		}
 		
-		private function thinkWander():void
+		protected function thinkWander():void
 		{
 			if ( target && canSee( target ) )
 			{
 				_aiState = AI_STATE_CHASE;
 				_wanderDest = null;
+				_surprisedUntil = FlxU.getTicks() + _surprisedDuration;
 			}
 			else if ( !_wanderDest )
 			{
@@ -217,7 +208,7 @@ package
 		public function get tilex():int { return Math.floor( ox / Level.TILE_SIZE ); }
 		public function get tiley():int { return Math.floor( oy / Level.TILE_SIZE ); }
 		
-		private function thinkChase():void
+		protected function thinkChase():void
 		{
 			// if the target's position has changed, generate a new path
 			var targetTileX:int = Math.floor( target.ox / Level.TILE_SIZE );
@@ -247,7 +238,7 @@ package
 			return deltaDist <= viewDist && deltaAngle <= fov * 0.5;
 		}
 		
-		private function get _viewDir():FlxPoint
+		protected function get _viewDir():FlxPoint
 		{
 			var viewDir:FlxPoint = new FlxPoint();
 			switch( dir )
@@ -278,7 +269,7 @@ package
 		}
 		
 		/// Tick is the delay in milliseconds before the next think
-		private function setNextThink( Tick:Number ):void
+		protected function setNextThink( Tick:Number ):void
 		{
 			_nextThinkMark = FlxU.getTicks() + Tick;
 		}
@@ -297,6 +288,18 @@ package
 			path = null;
 			_wanderDest = null;
 			super.destroy();
+		}
+		
+		override public function draw():void 
+		{
+			super.draw();
+			
+			if ( FlxU.getTicks() <= _surprisedUntil )
+			{
+				_flashPoint.x = ox - FlxG.camera.scroll.x * scrollFactor.x +  - 2;
+				_flashPoint.y = y - FlxG.camera.scroll.y * scrollFactor.y - _exclam.height - 7;
+				FlxG.camera.buffer.copyPixels( _exclam, _exclam.rect, _flashPoint, null, null, true );
+			}
 		}
 	}
 

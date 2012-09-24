@@ -30,6 +30,7 @@ package
 		private var _lvls:LevelManager;
 		private var _level:Level;
 		private var _al:FlxGroup;
+		private var _snowballs:FlxGroup;
 		
 		override public function create():void 
 		{	
@@ -77,6 +78,9 @@ package
 				remove( _yetis, true );
 				_yetis = null;
 				
+				remove( _snowballs, true );
+				_snowballs = null;
+				
 				remove( _playerSpawn, true );
 				remove( _goal, true );
 				
@@ -87,9 +91,6 @@ package
 				remove( _emeralds, true );
 				_emeralds.destroy();
 				_emeralds = null;
-				
-				//remove( _spawners, true );
-				//_spawners = null;
 			}
 			
 			if ( _level != null && _level.isLoaded )
@@ -108,6 +109,8 @@ package
 				
 				_p.centerOn( _level.playerSpawnPos.x, _level.playerSpawnPos.y );
 				add( _p );
+				
+				add( _snowballs = new FlxGroup() );
 				
 				add( _healthBar );
 				add( _emeraldCounter );
@@ -168,6 +171,22 @@ package
 			}
 		}
 		
+		private function playerTouchedSnowball( obj1:FlxObject, obj2:FlxObject ):void
+		{
+			if ( obj2 is Snowball )
+			{
+				removeSnowball( obj2 as Snowball );
+				if ( _p.vulnerable )
+					_p.hurt( 1 );
+			}
+		}
+		
+		public function snowballTouchedMap( obj1:FlxObject, obj2:FlxObject ):void
+		{
+			if ( obj1 is Snowball )
+				removeSnowball( obj1 as Snowball );
+		}
+		
 		private function playerTouchedGoal( obj1:FlxObject, obj2:FlxObject ):void
 		{
 			_level = _lvls.gotoNext();
@@ -182,6 +201,8 @@ package
 			// check overlaps
 			FlxG.overlap( _p, _emeralds, playerTouchedEmerald );
 			FlxG.overlap( _p, _goal, playerTouchedGoal );
+			FlxG.overlap( _p, _snowballs, playerTouchedSnowball );
+			FlxG.collide( _snowballs, _map, snowballTouchedMap ); // need to use collide or event will fire for empty tiles
 			
 			// sample input and act on it
 			var frameMoveSpeed:Number = SHERPA_MOVE_SPEED * FlxG.elapsed;
@@ -243,10 +264,16 @@ package
 			super.update();
 		}
 		
-		override public function draw():void 
+		public function addSnowball( PlaceAt:FlxPoint, TravelDirection:FlxPoint ):void
 		{
-			// _al.sort();
-			super.draw();
+			_snowballs.add( new Snowball( PlaceAt.x, PlaceAt.y, TravelDirection ) );
+		}
+		
+		public function removeSnowball( SnowballToRemove:Snowball ):void
+		{
+			_snowballs.remove( SnowballToRemove, true );
+			SnowballToRemove.destroy();
+			SnowballToRemove = null;
 		}
 		
 	}

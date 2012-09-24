@@ -123,7 +123,8 @@ package
 							goalPos.make( xr, yr );
 							break;
 						case LEGEND_OBJ_ENEMY01:
-							yetis.add( new Yeti( xr, yr ) );
+							yetis.add( new RangeYeti( xr, yr ) );
+							//yetis.add( new Yeti( xr, yr ) );
 							break;
 						case LEGEND_OBJ_ENEMY02:
 							yetis.add( new Yeti( xr, yr ) );
