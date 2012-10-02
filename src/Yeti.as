@@ -138,7 +138,7 @@ package
 		
 		protected function thinkSleep():void
 		{
-			if ( target && canSee( target ) )
+			if ( target && !_world.player.hiding && canSee( target ) )
 			{
 				_surprisedUntil = FlxU.getTicks() + _surprisedDuration;
 				_aiState = AI_STATE_CHASE;
@@ -151,7 +151,7 @@ package
 		
 		protected function thinkWander():void
 		{
-			if ( target && canSee( target ) )
+			if ( target && !_world.player.hiding && canSee( target ) )
 			{
 				_aiState = AI_STATE_CHASE;
 				_wanderDest = null;
@@ -266,6 +266,11 @@ package
 			setNextThink( hurtDuration );
 			flicker( hurtDuration / 1000 );
 			super.hurt(Damage);
+		}
+		
+		public function stabInBack():void
+		{
+			hurt( health );
 		}
 		
 		/// Tick is the delay in milliseconds before the next think

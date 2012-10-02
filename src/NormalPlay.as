@@ -8,7 +8,8 @@ package
 	/// @author Derek Brown
 	public class NormalPlay extends FlxState 
 	{	
-		private const SHERPA_MOVE_SPEED:Number = 40.0;
+		private const SHERPA_MOVE_SPEED:Number = 30.0;
+		private const SHERPA_SPRINT_SPEED:Number = 75.0;
 		private const SHERPA_MAX_VELOCITY:Number = 100.0;
 		private const SHERPA_DRAG:Number = 55.0;
 		private const SHERPA_HURT_PUSH_FORCE:Number = 60.0;
@@ -31,6 +32,8 @@ package
 		private var _level:Level;
 		private var _al:FlxGroup;
 		private var _snowballs:FlxGroup;
+		private var _lblEnergy:FlxText;
+		private var _lblRage:FlxText;
 		
 		override public function create():void 
 		{	
@@ -56,6 +59,16 @@ package
 			
 			_healthUpTimer = new FlxTimer();
 			_healthUpTimer.start( 0.25, 5, healthUpTimerTick );
+			
+			_lblEnergy = new FlxText( FlxG.width - 100, 25, 100, "E:100/100" );
+			_lblEnergy.alignment = "right";
+			_lblEnergy.scrollFactor.make();
+			_lblEnergy.shadow = 0xFF000000;
+			
+			_lblRage = new FlxText( FlxG.width - 100, 40, 100, "R:50/50" );
+			_lblRage.alignment = "right";
+			_lblRage.scrollFactor.make();
+			_lblRage.shadow = 0xFF000000;
 			/////////////////////////////////////////////////////////////////
 			
 			// setup level things
@@ -91,6 +104,9 @@ package
 				remove( _emeralds, true );
 				_emeralds.destroy();
 				_emeralds = null;
+				
+				remove( _lblEnergy, true );
+				remove( _lblRage, true );
 			}
 			
 			if ( _level != null && _level.isLoaded )
@@ -114,6 +130,9 @@ package
 				
 				add( _healthBar );
 				add( _emeraldCounter );
+				
+				add( _lblEnergy );
+				add( _lblRage );
 				
 				// setup camera
 				FlxG.camera.focusOn( new FlxPoint( _p.x, _p.y ) );
@@ -205,21 +224,33 @@ package
 			FlxG.collide( _snowballs, _map, snowballTouchedMap ); // need to use collide or event will fire for empty tiles
 			
 			// sample input and act on it
-			var frameMoveSpeed:Number = SHERPA_MOVE_SPEED * FlxG.elapsed;
-			if ( FlxG.keys.LEFT || FlxG.keys.RIGHT )
+			_p.sprinting = _p.canSprint && FlxG.keys.SHIFT;
+			if ( !_p.attacking && !_p.hiding )
 			{
-				_p.x += FlxG.keys.LEFT ? -frameMoveSpeed : FlxG.keys.RIGHT ? frameMoveSpeed : 0;
-				_p.dir = FlxG.keys.LEFT ? "left" : "right";
-			}
-			else if ( FlxG.keys.UP || FlxG.keys.DOWN )
-			{
-				_p.y += FlxG.keys.UP ? -frameMoveSpeed : FlxG.keys.DOWN ? frameMoveSpeed : 0;
-				_p.dir = FlxG.keys.UP ? "up" : "down";
+				var frameMoveSpeed:Number = _p.sprinting ? SHERPA_SPRINT_SPEED * FlxG.elapsed : SHERPA_MOVE_SPEED * FlxG.elapsed;
+				if ( FlxG.keys.LEFT || FlxG.keys.RIGHT )
+				{
+					_p.x += FlxG.keys.LEFT ? -frameMoveSpeed : FlxG.keys.RIGHT ? frameMoveSpeed : 0;
+					_p.dir = FlxG.keys.LEFT ? "left" : "right";
+				}
+				else if ( FlxG.keys.UP || FlxG.keys.DOWN )
+				{
+					_p.y += FlxG.keys.UP ? -frameMoveSpeed : FlxG.keys.DOWN ? frameMoveSpeed : 0;
+					_p.dir = FlxG.keys.UP ? "up" : "down";
+				}
 			}
 			
-			if ( FlxG.keys.justPressed( "SPACE" ) )
+			_p.hiding = FlxG.keys.C && !_p.attacking;
+			
+			if ( FlxG.keys.justPressed( "X" ) )
 			{
 				var i:int = 0;
+				
+				var backstab:Boolean = false;
+				
+				var yetisHit:Array = _p.attack( _yetis );
+				for ( i = 0; i < yetisHit.length; ++i )
+					push( new FlxPoint( _p.x, _p.y ), yetisHit[i], SHERPA_ATTACK_PUSH_FORCE );
 				
 				var debrisHit:Array = _p.attack( _debris );
 				for ( i = 0; i < debrisHit.length; ++i )
@@ -232,14 +263,17 @@ package
 						_map.setTile( tilex, tiley, 0, true );
 					}
 				}
-				
-				var yetisHit:Array = _p.attack( _yetis );
-				for ( i = 0; i < yetisHit.length; ++i )
-					push( new FlxPoint( _p.x, _p.y ), yetisHit[i], SHERPA_ATTACK_PUSH_FORCE );
+					
+				var snowballsHit:Array = _p.attack( _snowballs );
+				for ( i = 0; i < snowballsHit.length; ++i )
+					removeSnowball( snowballsHit[i] as Snowball );
 			}
 			
 			if ( FlxG.keys.justPressed( "R" ) )
 				_p.respawn();
+				
+			if ( FlxG.keys.justPressed( "Z" ) && _p.canRage )
+				_p.raging = true;
 				
 			// check and resolve collisions
 			FlxG.collide( _p, _yetis, playerTouchedYeti );
@@ -252,7 +286,12 @@ package
 				_emeraldCounter.setValue( _p.nEmeralds );
 			if ( _healthBar.getHeartPeices() != _p.health )
 				_healthBar.setHeartPeices( _p.health );
-				
+			
+			_lblEnergy.text = "E:" + Math.ceil(_p.sprintEnergy) + "/" + Math.ceil(_p.maxSprintEnergy);
+			_lblEnergy.color = _p.exhausted ? 0xffff0000 : 0xffffffff;
+			
+			_lblRage.text = "R:" + Math.ceil(_p.rageEnergy) + "/" + Math.ceil(_p.maxRageEnergy);
+			_lblRage.color = _p.raging ? 0xffff8888 : _p.canRage ? 0xffffffff : 0xff888888;
 			/*
 			if ( FlxG.mouse.justReleased() )
 			{

@@ -33,6 +33,7 @@ package
 			scrollFactor.make();
 			_countLabel = new FlxText(0, 0, 30, "0x" );
 			_countLabel.alignment = "right";
+			_countLabel.shadow = 0xFF000000;
 		}
 		
 		override public function draw():void 

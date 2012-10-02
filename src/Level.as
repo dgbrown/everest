@@ -20,11 +20,8 @@ package
 		private static const LEGEND_TILE_ICE_FRONT:uint = 0x252525;
 		
 		private static const LEGEND_OBJ_ENEMY01:uint = 0xeeeeee;
-		private static const LEGEND_OBJ_ENEMY02:uint = 0xcccccc;
-		private static const LEGEND_OBJ_ENEMY03:uint = 0xaaaaaa;
-		private static const LEGEND_OBJ_ENEMY04:uint = 0x888888;
-		private static const LEGEND_OBJ_ENEMY05:uint = 0x666666;
-		private static const LEGEND_OBJ_ENEMY06:uint = 0x444444;
+		private static const LEGEND_OBJ_ENEMY02:uint = 0x888888;
+		private static const LEGEND_OBJ_ENEMY03:uint = 0x444444;
 		
 		public var id:String;
 		public var name:String;
@@ -123,20 +120,14 @@ package
 							goalPos.make( xr, yr );
 							break;
 						case LEGEND_OBJ_ENEMY01:
-							yetis.add( new RangeYeti( xr, yr ) );
-							//yetis.add( new Yeti( xr, yr ) );
+							yetis.add( new MeleeYeti( xr, yr ) );
 							break;
 						case LEGEND_OBJ_ENEMY02:
-							yetis.add( new Yeti( xr, yr ) );
+							yetis.add( new RangeYeti( xr, yr ) );
 							break;
 						case LEGEND_OBJ_ENEMY03:
-							yetis.add( new Yeti( xr, yr ) );
-							break;
-						case LEGEND_OBJ_ENEMY04:
-							yetis.add( new Yeti( xr, yr ) );
-							break;
-						case LEGEND_OBJ_ENEMY05:
-							yetis.add( new Yeti( xr, yr ) );
+							// charge yeti
+							yetis.add( new RangeYeti( xr, yr ) );
 							break;
 						/*
 						case LEGEND_ENEMY_SPAWNER:
